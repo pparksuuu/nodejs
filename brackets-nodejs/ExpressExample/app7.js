@@ -28,9 +28,9 @@ app.use(function(req, res, next) {
     // GET인지 POST인지 잘 모르겠으면 아래처럼 써라.
     // 라우팅 함수를 등록할 POST, GET 바뀌는 경우가 있기 때문에
     // 아래처럼 등록하면 편하다.
-    var paramName = req.body.name || req.query.name;
+    var paramId = req.body.id || req.query.id;
     
-     res.send('<h3>서버에서 응답. User-Agent -> ' + userAgent + '</h3> <h3>Param Name ->' + paramName + '</h3>');
+     res.send('<h3>서버에서 응답. User-Agent -> ' + userAgent + '</h3> <h3>Param Name ->' + paramId + '</h3>');
 });
 
 var server = http.createServer(app).listen(app.get('port'), function() {
