@@ -158,7 +158,7 @@ router.route('/process/setUserCookie').get(function(req, res) {
     res.cookie('user', {
         id:'mike',
         name:'SUHYEON',
-        authrized:true
+        authorized:true
     });
     res.redirect('/process/showCookie');
 });

@@ -46,7 +46,8 @@ server.on('request', function(req, res) {
     
     // 파일 내용을 스트림에서 읽어 본문 쓰기
     infile.on('readable', function(){
-        
+       var chunk;
+        while (null !==())
     });
     
     // 파이프로 연결하여 알아서 처리하도록 설정
