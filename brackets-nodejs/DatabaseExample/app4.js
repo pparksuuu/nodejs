@@ -32,13 +32,32 @@ function connectDB() {
         
         // 객체에 정의한다.
         UserSchema = mongoose.Schema({
-            id: String,
-            name: String,
-            password: String
+            id: {type:String, required:true, unique:true},
+            password: {type:String, required:true},
+            name: {type:String, index:'hashed'},
+            age: {type:Number, 'default':-1},
+            created_at: {type:Date, index:{unique:false}, 'default':Date.now()},
+            updated_at: {type:Date, index:{unique:false}, 'default':Date.now()}
         });
         console.log('UserSchema 정의함.');
         
-        UserModel = mongoose.model('users', UserSchema);
+        UserSchema.static('findById', function(id, callback) {
+            return this.find({id:id}, callback);
+        });
+        
+        /*
+        UserSchema.statics.findById = function(id, callback) {
+            return this.find({id:id}, callback);
+            // JS에서의 this는 함수를 호출한 객체.
+            // this는 모델 객체를 참조중이다.
+        }
+        */
+        
+        UserSchema.static('findAll', function(callback) {
+            return this.find({}, callback); 
+        });
+        
+        UserModel = mongoose.model('users2', UserSchema);
         console.log('UserModel 정의함');
         
     });
@@ -153,11 +172,74 @@ router.route('/process/adduser').post(function(req, res) {
     }
 });
 
+router.route('/process/listuser').post(function(req, res) {
+    console.log('/process/listuser 라우팅 함수 호출됨.');
+    
+    if (database) {
+        UserModel.findAll(function(err, results) {
+                if (err) {
+                console.log('에러 발생.');
+                res.writeHead(200, {"Content-Type":"text/html;charset=utf8"});
+                res.write('<h1>에러 발생</h1>');
+                res.end();
+                return;
+            }
+            
+            if (results) {
+                console.dir(results);
+                
+                res.writeHead(200, {"Content-Type":"text/html;charset=utf8"});
+                res.write("<h3>사용자 리스트</h3>");
+                res.write("<div><ul>");
+                
+                for (var i = 0; i < results.length; i++) {
+                    var curId = results[i]._doc.id;
+                    var curName = results[i]._doc.name;
+                    res.write("    <li>#" + i + " -> " + curId + ", " + curName + "</li>");
+                }
+                
+                res.write("</ul></div>");
+                res.end();
+            } else {
+               console.log('에러 발생.');
+                res.writeHead(200, {"Content-Type":"text/html;charset=utf8"});
+                res.write('<h1>조회된 사용자 없음.</h1>');
+                res.end();
+            }
+        });
+    } else {
+            console.log('에러 발생.');
+            res.writeHead(200, {"Content-Type":"text/html;charset=utf8"});
+            res.write('<h1>데이터베이스 연결 안됨.</h1>');
+            res.end();
+    }
+});
+
 app.use('/', router);
 
 var authUser = function(db, id, password, callback) {
     console.log('authUser 호출됨.' + id + ', ' + password);
     
+    UserModel.findById(id, function(err, results) {
+        if (err) {
+            callback(err, null);
+            return;
+        } 
+        
+        console.log('아이디 %s로 검색됨.', id);
+        if (results.length > 0) {
+            if (results[0]._doc.password === password){
+                console.log('비밀번호 일치함.');
+                callback(null, results);
+            } else {
+                console.log('비밀번호 일치하지 않음.');
+                callback(null, null);
+            }
+        } else {
+            console.log('아이디 일치하는 사용자 없음.');
+            callback(null, null);
+        }
+    });
     
     
     // 이전과의 차이점 : collection이 아니라 UserModel에서 find 하겠다!
